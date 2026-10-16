@@ -3,7 +3,7 @@
 Сцена «Скоро начнём» для OBS: город со сменой дня и ночи, из окон которого вылетают сообщения Twitch-чата в облачках из жидкого стекла. Один HTML-файл, без установки
 
 **[English](#english) · [Русский](#русский)**
-
+![Preview](https://github.com/ll1k4/OBS-city-chat-starting-soon-overlay/blob/main/1.gif)
 <!-- После загрузки скриншота раскомментируй: ![Preview](preview.png) -->
 
 ---
