@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Скоро начнём</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#000}
+#s{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;font:600 26px 'Segoe UI',system-ui,sans-serif}
+canvas{position:absolute;inset:0}
+#t{position:absolute;top:54px;width:100%;text-align:center;font:500 64px 'Unbounded','Segoe UI',sans-serif;letter-spacing:3px;color:#fff;text-shadow:0 4px 28px #0007}
+</style></head><body>
+<div id="s"><canvas id="c" width="1920" height="1080"></canvas><div id="t"></div></div>
+<script>
+/* Настройки можно менять тут или в адресе: ?twitch=канал  ?ws=ws://127.0.0.1:порт  ?demo=1  ?hour=21  ?title=Текст */
+const P=new URLSearchParams(location.search),
+C={twitch:P.get('twitch')??'',ws:P.get('ws'),title:P.get('title')??'Скоро начнём'},
+S=document.getElementById('s'),g=document.getElementById('c').getContext('2d');
+document.getElementById('t').textContent=C.title;
+const fit=()=>S.style.transform='scale('+Math.min(innerWidth/1920,innerHeight/1080)+')';
+addEventListener('resize',fit);fit();
+
+let sd=11;const R=()=>(sd=sd*16807%2147483647)/2147483647,rr=(a,b)=>a+R()*(b-a),
+mx=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t),rgb=(a,al=1)=>`rgba(${a.map(Math.round)},${al})`,
+sm=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
+
+/* Город: три слоя домов (дальний, средний, ближний). Облачка появляются в окнах ближнего слоя */
+const LY=[{c:[[150,168,196],[18,26,56]],h:[240,500],w:[90,160],ws:[8,12],gp:[6,9],a:.5},
+{c:[[104,124,156],[13,20,50]],h:[300,640],w:[120,200],ws:[12,16],gp:[10,14],a:.75},
+{c:[[70,88,122],[8,13,36]],h:[320,720],w:[170,260],ws:[22,30],gp:[16,20],a:1}],
+BL=[[],[],[]],WL=[[],[],[]];
+LY.forEach((l,li)=>{let x=-40;while(x<1940){const w=rr(...l.w),h=rr(...l.h);BL[li].push({x,w,h,v:rr(-6,6)});
+for(let wx=x+14;wx+l.ws[0]<x+w-10;wx+=l.ws[0]+l.gp[0])for(let wy=1080-h+18;wy+l.ws[1]<1050;wy+=l.ws[1]+l.gp[1])
+WL[li].push({x:wx,y:wy,w:l.ws[0],h:l.ws[1],on:R()<.5,hot:0});x+=w+rr(0,14)}});
+const ST=Array.from({length:140},()=>({x:rr(0,1920),y:rr(0,620),r:rr(.6,1.8),p:rr(0,6.28)}));
+let NI=0;
+setInterval(()=>WL.forEach(L=>{for(let k=0;k<4;k++)L[Math.random()*L.length|0].on=Math.random()<.15+.6*NI}),350);
+
+function draw(t){
+const h=P.has('hour')?+P.get('hour'):(d=>d.getHours()+d.getMinutes()/60+d.getSeconds()/3600)(new Date()),
+e=Math.sin(2*Math.PI*(h-6)/24),day=sm(-.12,.28,e),n=NI=1-day,tw=Math.max(0,1-Math.abs(e)/.3);
+let top=mx([6,10,32],[70,146,226],day),bot=mx([26,34,80],[190,226,255],day);
+top=mx(top,[88,70,140],tw*.7);bot=mx(bot,[255,138,92],tw*.85);
+const k=g.createLinearGradient(0,0,0,1080);k.addColorStop(0,rgb(top));k.addColorStop(1,rgb(bot));g.fillStyle=k;g.fillRect(0,0,1920,1080);
+ST.forEach(s=>{g.fillStyle=`rgba(255,255,255,${n*(.5+.5*Math.sin(t/700+s.p))})`;g.beginPath();g.arc(s.x,s.y,s.r,0,6.3);g.fill()});
+/* солнце днём, луна ночью */
+const q=((h-6)%24+24)%24,p=(q%12)/12,sun=q<12,x=160+p*1600,y=780-Math.sin(p*Math.PI)*600,
+col=sun?mx([255,244,200],[255,150,80],tw):[225,232,255],rad=sun?70:48;
+g.globalAlpha=sun?1:sm(.3,.7,n);
+const gr=g.createRadialGradient(x,y,0,x,y,rad*4);gr.addColorStop(0,rgb(col,.9));gr.addColorStop(.25,rgb(col,.35));gr.addColorStop(1,rgb(col,0));
+g.fillStyle=gr;g.fillRect(x-rad*4,y-rad*4,rad*8,rad*8);g.fillStyle=rgb(col);g.beginPath();g.arc(x,y,rad,0,6.3);g.fill();g.globalAlpha=1;
+/* дома и окна */
+LY.forEach((l,li)=>{const c=mx(l.c[0],l.c[1],n),cw=mx(c,[255,140,90],tw*(li?.07:.12));
+BL[li].forEach(b=>{g.fillStyle=rgb(cw.map(v=>v+b.v));g.fillRect(b.x,1080-b.h,b.w,b.h)});
+WL[li].forEach(w=>{const hot=w.hot>t;
+if(hot){g.fillStyle='rgba(255,200,120,.28)';g.fillRect(w.x-7,w.y-7,w.w+14,w.h+14)}
+g.fillStyle=(w.on||hot)?`rgba(255,${200+w.x%40},120,${hot?1:.2+.8*n*l.a})`:(day>.5?'rgba(255,255,255,.1)':'rgba(0,0,10,.3)');
+g.fillRect(w.x,w.y,w.w,w.h)})});
+const gg=g.createLinearGradient(0,900,0,1080);gg.addColorStop(0,'rgba(0,0,0,0)');gg.addColorStop(1,'rgba(0,0,0,.4)');g.fillStyle=gg;g.fillRect(0,900,1920,180);glassBubbles()
+}
+requestAnimationFrame(function f(t){draw(t);requestAnimationFrame(f)});
+
+/* Облачка: жидкое стекло рисуется прямо на холсте и преломляет картинку города позади себя */
+const PL={twitch:['Twitch','#a970ff'],youtube:['YouTube','#ff5a5a'],vk:['VK','#4d9bff']},Q=[],FN='"Segoe UI",system-ui,sans-serif',MW=340;let A=[];
+const cv=document.getElementById('c'),snap=document.createElement('canvas');snap.width=1920;snap.height=1080;const sg=snap.getContext('2d');
+function add(p,u,t){t=String(t).trim();if(!t||t[0]=='!')return;if(t.length>110)t=t.slice(0,107)+'…';
+Q.push([String(p).toLowerCase(),String(u).slice(0,28),t]);if(Q.length>20)Q.shift()}
+window.addChat=add; /* add('youtube','Ник','Текст') — сюда можно слать сообщения из любого источника */
+function wrap(t){sg.font='600 26px '+FN;const L=[];let l='';
+for(const w of t.split(/\s+/)){const c=l?l+' '+w:w;if(sg.measureText(c).width<=MW){l=c;continue}
+if(l)L.push(l);l='';if(sg.measureText(w).width<=MW){l=w;continue}
+for(const ch of w){if(sg.measureText(l+ch).width>MW){L.push(l);l=ch}else l+=ch}}
+if(l)L.push(l);if(L.length>4){L.length=4;L[3]=L[3].slice(0,-1)+'…'}return L}
+const uCol=u=>{let h=0;for(const c of u)h=(h*37+c.charCodeAt(0))%360;return`hsl(${h},95%,70%)`};
+function layout([p,u,t]){const L=wrap(t),[nm,col]=PL[p]||[p||'chat','#fff'],hd=nm+' · '+u;let w=110;
+sg.font='600 26px '+FN;for(const l of L)w=Math.max(w,sg.measureText(l).width);
+sg.font='800 22px '+FN;w=Math.max(w,sg.measureText(hd).width);return{L,nm,u,col,uc:uCol(u),w:Math.ceil(w)+48,h:L.length*32+58}}
+/* выбираем окно ближнего слоя, чтобы облачко не наезжало на другие */
+setInterval(()=>{if(!Q.length||A.length>=6)return;const m=layout(Q[0]),now=performance.now();
+for(let k=0;k<30;k++){const w=WL[2][Math.random()*WL[2].length|0];if(w.hot>now||w.x<60||w.x>1860)continue;
+const tx=w.x+w.w/2,ty=w.y-6,x=Math.min(Math.max(tx-m.w/2,24),1896-m.w),y=ty-30-m.h;
+if(y<10||A.some(a=>x<a.x+a.w+30&&x+m.w+30>a.x&&y<a.y+a.h+30&&y+m.h+30>a.y))continue;
+const life=6000+Q[0][2].length*45;Q.shift();w.hot=now+life+600;w.on=true;A.push({...m,x,y,tx,ty,t0:now,life});return}},900);
+/* контур: скруглённое тело и плавный хвостик, который указывает точно на окно */
+function shp(x,y,w,h,tx,ty){const r=Math.min(30,h/2),b=y+h,tb=Math.min(Math.max(tx,x+r+26),x+w-r-26);
+g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,b,r);g.arcTo(x+w,b,tb+24,b,r);g.lineTo(tb+24,b);
+g.quadraticCurveTo(tb+4,b,tx,ty);g.quadraticCurveTo(tb-4,b,tb-24,b);g.arcTo(x,b,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function glassBubbles(){const now=performance.now();A=A.filter(a=>now-a.t0<a.life+500);if(!A.length)return;sg.drawImage(cv,0,0);
+for(const a of A){const age=now-a.t0,k=Math.min(1,age/450),s=1+2.70158*(k-1)**3+1.70158*(k-1)**2,
+al=Math.min(1,age/200)*(age>a.life?1-(age-a.life)/500:1),P_=()=>shp(a.x,a.y,a.w,a.h,a.tx,a.ty);
+g.save();g.globalAlpha=Math.max(0,al);g.translate(a.tx,a.ty);g.scale(s,s);g.translate(-a.tx,-a.ty);
+P_();g.shadowColor='rgba(0,0,0,.4)';g.shadowBlur=34;g.shadowOffsetY=12;g.fillStyle='#000';g.fill();g.shadowColor='transparent';
+g.save();P_();g.clip();
+/* преломление: увеличенная и слегка размытая картинка города за стеклом */
+const bx=a.x-14,by=a.y-14,bw=a.w+28,bh=a.ty-a.y+28,m=1.22,cx=a.x+a.w/2,cy=a.y+a.h/2;
+g.filter='blur(4px) saturate(1.6) brightness(1.1)';g.drawImage(snap,cx-(cx-bx)/m,cy-(cy-by)/m,bw/m,bh/m,bx,by,bw,bh);g.filter='none';
+g.fillStyle='rgba(12,18,44,.30)';g.fillRect(bx,by,bw,bh);
+const lg=g.createLinearGradient(0,a.y,0,a.y+a.h);lg.addColorStop(0,'rgba(255,255,255,.30)');lg.addColorStop(.45,'rgba(255,255,255,.04)');lg.addColorStop(1,'rgba(255,255,255,.12)');
+g.fillStyle=lg;g.fillRect(bx,by,bw,bh);
+P_();g.lineWidth=6;g.strokeStyle='rgba(255,255,255,.09)';g.stroke();g.restore();
+/* кромка: цветная кайма и светлый ободок */
+const edge=(dx,st,lw,op)=>{g.save();g.translate(dx,0);g.globalCompositeOperation=op;P_();g.lineWidth=lw;g.strokeStyle=st;g.stroke();g.restore()};
+edge(1,'rgba(255,70,120,.30)',1.2,'lighter');edge(-1,'rgba(70,200,255,.30)',1.2,'lighter');
+const rg=g.createLinearGradient(a.x,a.y,a.x+a.w,a.y+a.h);rg.addColorStop(0,'rgba(255,255,255,.95)');rg.addColorStop(.5,'rgba(255,255,255,.15)');rg.addColorStop(1,'rgba(255,255,255,.7)');
+edge(0,rg,1.2,'source-over');
+g.shadowColor='rgba(0,0,0,.55)';g.shadowBlur=6;g.textBaseline='top';
+let hx=a.x+24;g.font='800 22px '+FN;g.shadowColor='transparent';g.lineJoin='round';g.lineWidth=5;g.strokeStyle='#000';[[a.nm,a.col],[' · ','rgba(255,255,255,.65)'],[a.u,a.uc]].forEach(([t,c])=>{g.strokeText(t,hx,a.y+14);g.fillStyle=c;g.fillText(t,hx,a.y+14);hx+=g.measureText(t).width});g.shadowColor='rgba(0,0,0,.55)';
+g.fillStyle='#fff';g.font='600 26px '+FN;a.L.forEach((l,i)=>g.fillText(l,a.x+24,a.y+42+i*32));
+g.restore()}}
+
+/* Twitch: читаем чат анонимно, без логина */
+function joinTwitch(ch){const s=new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+s.onopen=()=>{s.send('CAP REQ :twitch.tv/tags');s.send('PASS SCHMOOPIIE');s.send('NICK justinfan'+(Math.random()*8e4|0));s.send('JOIN #'+ch.toLowerCase())};
+s.onmessage=e=>e.data.split('\r\n').forEach(l=>{if(l.startsWith('PING'))return s.send('PONG :tmi.twitch.tv');
+const m=l.match(/display-name=([^;]*);.* PRIVMSG #\S+ :(.*)/);if(m)add('twitch',m[1],m[2])});
+s.onclose=()=>setTimeout(()=>joinTwitch(ch),5000)}
+if(C.twitch)joinTwitch(C.twitch);
+
+/* Любой агрегатор чатов (YouTube, VK) через WebSocket: сообщения вида {"platform":"youtube","user":"Ник","text":"Текст"} */
+if(C.ws){const c=()=>{const s=new WebSocket(C.ws);s.onmessage=e=>{try{const m=JSON.parse(e.data);add(m.platform||'',m.user||m.author||'?',m.text||m.message||'')}catch{}};s.onclose=()=>setTimeout(c,5000)};c()}
+
+/* Проверка без стрима: ?demo=1 */
+if(P.has('demo')){const U=['Мурка','Zeta','Vasya_VR','Lingo','Катя'],T=['Привет всем!','Уже жду стрим 👀','Какая игра сегодня?','Красивый город','Музыка огонь','Сколько до старта?'];
+setInterval(()=>add(['twitch','youtube','vk'][Math.random()*3|0],U[Math.random()*5|0],T[Math.random()*6|0]),1800)}
+</script></body></html>
