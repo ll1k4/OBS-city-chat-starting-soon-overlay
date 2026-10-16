@@ -1,68 +1,12 @@
-# City Chat Overlay
+# Оверлей городского чата (City Chat Overlay)
 
-A "Starting soon" scene for OBS: a night-and-day city skyline where Twitch chat messages pop out of random windows as liquid-glass speech bubbles.
+Сцена «Скоро начнём» для OBS: город со сменой дня и ночи, из окон которого вылетают сообщения Twitch-чата в облачках из жидкого стекла. Один HTML-файл, без установки
 
 **[English](#english) · [Русский](#русский)**
 
 <!-- После загрузки скриншота раскомментируй: ![Preview](preview.png) -->
 
 ---
-
-## English
-
-### Features
-
-- **Real time of day.** Sky, sun, moon, stars, sunset glow and lit windows follow your PC clock.
-- **Chat in the windows.** Each Twitch message appears in a speech bubble with a tail pointing at the window it came from, and that window lights up.
-- **Liquid-glass bubbles.** The glass refracts and blurs the city behind it. Each nickname gets its own stable colour, with a black outline so it stays readable on any background.
-- **One file.** A single `index.html`: no install, no build step, no account, no login. It reads Twitch chat anonymously (read-only).
-- **Safe.** Messages are drawn as canvas text, so chat cannot inject HTML. Messages starting with `!` (bot commands) are ignored.
-
-### Quick start (OBS)
-
-1. Download `index.html` and put it somewhere permanent, e.g. `C:\OBS\city\index.html`.
-2. In OBS, open your "Starting soon" scene → **Sources → + → Browser**.
-3. **Untick "Local file"** and paste this into **URL** (use your own path and channel):
-   ```
-   file:///C:/OBS/city/index.html?twitch=YOUR_CHANNEL
-   ```
-4. Set **Width 1920, Height 1080**.
-5. Tick **Shutdown source when not visible** and **Refresh browser when scene becomes active**, so the page does not run on other scenes and reconnects to chat each time.
-
-No local file? Enable GitHub Pages for your fork and use `https://YOUR_NAME.github.io/REPO_NAME/?twitch=YOUR_CHANNEL` as the browser-source URL.
-
-### URL parameters
-
-| Parameter | Example | What it does |
-| --- | --- | --- |
-| `twitch` | `?twitch=mychannel` | Twitch channel whose chat is shown. Without it no chat is connected. |
-| `demo` | `?demo=1` | Fake messages from Twitch, YouTube and VK, for testing without a stream. |
-| `hour` | `?hour=21` | Fixes the time of day (0–24) instead of using the PC clock. Handy for previewing. |
-| `title` | `?title=Be%20right%20back` | Text at the top. Use `?title=` (empty) to hide it. |
-| `ws` | `?ws=ws://127.0.0.1:8080` | Optional: read messages from your own WebSocket (see below). |
-
-Combine them with `&`, for example `?twitch=mychannel&hour=22`.
-
-### YouTube, VK and other chats
-
-The page reads Twitch directly. For other platforms, send messages in from any aggregator or script:
-
-- **WebSocket:** `?ws=ws://127.0.0.1:PORT`. Each message must be JSON: `{"platform":"youtube","user":"Nick","text":"Hello"}`. Known platforms (`twitch`, `youtube`, `vk`) get their own label and colour.
-- **JavaScript:** call `addChat('youtube', 'Nick', 'Hello')` from the page.
-
-### Good to know
-
-- You need an internet connection (Twitch chat and the Unbounded font from Google Fonts). Without the font the title falls back to a system font.
-- At most six bubbles are shown at once, and extra messages wait in a short queue.
-- The glass effect uses canvas filters, so it needs a Chromium-based browser source (OBS Browser Source is one).
-- Colours, bubble lifetime and bubble count are plain constants in the script and easy to change.
-
-### Credits and license
-
-The liquid-glass look is inspired by [LiquidGlass by ybouane](https://liquid-glass.ybouane.com/); this project does not use its code. Licensed under the MIT License.
-
----
-
 ## Русский
 
 ### Возможности
@@ -83,8 +27,6 @@ The liquid-glass look is inspired by [LiquidGlass by ybouane](https://liquid-gla
    ```
 4. Размер: **ширина 1920, высота 1080**.
 5. Включи **«Выключать источник, когда он не отображается»** и **«Обновлять браузер, когда сцена становится активной»**. Тогда страница не работает на других сценах и заново подключается к чату при каждом показе.
-
-Нет желания держать файл локально? Включи GitHub Pages у своей копии репозитория и используй в источнике адрес `https://ТВОЙ_НИК.github.io/НАЗВАНИЕ_РЕПО/?twitch=ТВОЙ_КАНАЛ`.
 
 ### Параметры в адресе
 
@@ -112,6 +54,50 @@ The liquid-glass look is inspired by [LiquidGlass by ybouane](https://liquid-gla
 - Эффект стекла использует фильтры холста, поэтому нужен браузер на Chromium (Браузерный источник OBS подходит).
 - Цвета, время жизни облачка и их число — обычные константы в скрипте, их легко поменять.
 
-### Авторы и лицензия
+---
+## English
 
-Стеклянный вид вдохновлён [LiquidGlass от ybouane](https://liquid-glass.ybouane.com/), код этой библиотеки в проекте не используется. Лицензия MIT.
+### Features
+
+- **Real time of day.** Sky, sun, moon, stars, sunset glow and lit windows follow your PC clock.
+- **Chat in the windows.** Each Twitch message appears in a speech bubble with a tail pointing at the window it came from, and that window lights up.
+- **Liquid-glass bubbles.** The glass refracts and blurs the city behind it. Each nickname gets its own stable colour, with a black outline so it stays readable on any background.
+- **One file.** A single `index.html`: no install, no build step, no account, no login. It reads Twitch chat anonymously (read-only).
+- **Safe.** Messages are drawn as canvas text, so chat cannot inject HTML. Messages starting with `!` (bot commands) are ignored.
+
+### Quick start (OBS)
+
+1. Download `index.html` and put it somewhere permanent, e.g. `C:\OBS\city\index.html`.
+2. In OBS, open your "Starting soon" scene → **Sources → + → Browser**.
+3. **Untick "Local file"** and paste this into **URL** (use your own path and channel):
+   ```
+   file:///C:/OBS/city/index.html?twitch=YOUR_CHANNEL
+   ```
+4. Set **Width 1920, Height 1080**.
+5. Tick **Shutdown source when not visible** and **Refresh browser when scene becomes active**, so the page does not run on other scenes and reconnects to chat each time.
+
+### URL parameters
+
+| Parameter | Example | What it does |
+| --- | --- | --- |
+| `twitch` | `?twitch=mychannel` | Twitch channel whose chat is shown. Without it no chat is connected. |
+| `demo` | `?demo=1` | Fake messages from Twitch, YouTube and VK, for testing without a stream. |
+| `hour` | `?hour=21` | Fixes the time of day (0–24) instead of using the PC clock. Handy for previewing. |
+| `title` | `?title=Be%20right%20back` | Text at the top. Use `?title=` (empty) to hide it. |
+| `ws` | `?ws=ws://127.0.0.1:8080` | Optional: read messages from your own WebSocket (see below). |
+
+Combine them with `&`, for example `?twitch=mychannel&hour=22`.
+
+### YouTube, VK and other chats
+
+The page reads Twitch directly. For other platforms, send messages in from any aggregator or script:
+
+- **WebSocket:** `?ws=ws://127.0.0.1:PORT`. Each message must be JSON: `{"platform":"youtube","user":"Nick","text":"Hello"}`. Known platforms (`twitch`, `youtube`, `vk`) get their own label and colour.
+- **JavaScript:** call `addChat('youtube', 'Nick', 'Hello')` from the page.
+
+### Good to know
+
+- You need an internet connection (Twitch chat and the Unbounded font from Google Fonts). Without the font the title falls back to a system font.
+- At most six bubbles are shown at once, and extra messages wait in a short queue.
+- The glass effect uses canvas filters, so it needs a Chromium-based browser source (OBS Browser Source is one).
+- Colours, bubble lifetime and bubble count are plain constants in the script and easy to change.
